@@ -137,11 +137,33 @@ dat$dat2015 <- dat$dat2015 %>%
 ## Clean up 2016 
 ###############################
 
+# replace (with "NA") the comment in the "endpt shape" column about 1020 not being read
+dat$dat2016$endpt_shape <- gsub("1020", NA, dat$dat2016$endpt_shape)  
+dat$dat2016$set_code <- gsub("2020", NA, dat$dat2016$set_code)
+# get rid of column 15 and the last three columns (this one has an extra); they're blank and/or metadata
+dat$dat2016[c(15, 19, 20, 21)] <- NULL
+# first two rows are not blank here
+
+
+# insert NAs in date where everything else in the row is NA
+index_check <- dat$dat2016[, -1]
+empty_index <- which(rowSums(is.na(index_check)) == ncol(index_check))
+dat$dat2016[empty_index, 1] <- NA
+
+
 dat$dat2016 <- dat$dat2016 %>%
-    mutate(date = as.Date(date),
-           pin_height = as.numeric(x2016_measured_pin_height_cm),
-           front_back = f_b) %>%
-    select(set_id = set_code, date, arm_position = position, pin_number, pin_height, front_back = f_b, notes)
+        remove_empty("rows") %>%
+        rename(qc1 = primary_qa_qc_code,
+               qc2 = secondary_qa_qc_code,
+               front_back = f_b) %>%
+        mutate(date = as.Date(date),
+               pin_height_cm = as.numeric(x2016_measured_pin_height_cm),
+               qaqc_code = case_when( !is.na(qc1) & is.na(qc2) ~ qc1,
+                                      !is.na(qc1) & !is.na(qc2) ~ paste(qc1, qc2),
+                                      is.na(qc1) & !is.na(qc2) ~ qc2,
+                                      TRUE ~ NA_character_)) %>%
+        select(-qc1, -qc2, -x2016_measured_pin_height_cm) %>%
+        select(set_id = set_code, date, arm_position = position, pin_number, pin_height_cm, qaqc_code, everything())
 
 
 ###############################
