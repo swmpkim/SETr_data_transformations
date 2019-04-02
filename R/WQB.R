@@ -172,13 +172,28 @@ dat$dat2016 <- dat$dat2016 %>%
 # this one will be tougher because of the cross-comparisons between readers
 # for now only focusing on the main data table
 
-dat$dat2017 <- dat$dat2017 %>%
+
+##### DEAL WITH TIMES
+##### THEY'RE BEING WEIRD
+
+dat$dat2017[c(20, 24:26)] <- NULL
+
+test2017 <- dat$dat2017 %>%
+        remove_empty("rows") %>%
+        rename(qc1 = primary_qa_qc_code,
+               qc2 = secondary_qa_qc_code,
+               front_back = f_b) %>%
     mutate(date = as.Date(date),
-           pin_height = as.numeric(pin_length),
-           front_back = case_when(f_b_front_back == 'F' ~ 'Front',
-                                  f_b_front_back == 'B' ~ 'Back',
-                                  TRUE ~ f_b_front_back)) %>%
-    select(set_id = set_code, date, arm_position = position, pin_number, pin_height, front_back, notes)
+           pin_height_cm = as.numeric(x2016_measured_pin_height_cm),
+           front_back = case_when(front_back == 'F' ~ 'Front',
+                                  front_back == 'B' ~ 'Back',
+                                  TRUE ~ front_back),
+           qaqc_code = case_when( !is.na(qc1) & is.na(qc2) ~ qc1,
+                                  !is.na(qc1) & !is.na(qc2) ~ paste(qc1, qc2),
+                                  is.na(qc1) & !is.na(qc2) ~ qc2,
+                                  TRUE ~ NA_character_)) %>%
+        select(-qc1, -qc2, -x2016_measured_pin_height_cm) %>%
+        select(set_id = set_code, date, arm_position = position, pin_number, pin_height_cm, qaqc_code, everything())
 
 
 ###############################
