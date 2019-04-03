@@ -35,6 +35,9 @@ dat_wide <- dat %>%
 # specify the names - i want pin number at the front, rather than at the end,
 # of the new column names
 
+# much borrowing from this article:
+# https://tidyr.tidyverse.org/dev/articles/pivot.html#wider-1
+
 # first see what it's doing
 dat %>%
         pivot_wider_spec(names_from = pin_number, values_from = c(pin_height_cm, qaqc_code))
@@ -100,4 +103,19 @@ dat_wide <- dat %>%
 dupes <- get_dupes(dat_wide, set_id, date, arm_position)
 
 # phew! got rid of them all!
-                
+
+
+# let's see what got cut out:
+dat_trimmed <- dat %>%
+        select(c(pin_length_pin_meas:marsh_set_elevation_navd88_in_m),
+               pin_length_pin_meas_cm,
+               notes,
+               c(spal_nearby:aster_nearby)) %>%
+        names()
+
+
+out_path <- here("data", "intermediate_wide", "WQB_wider.csv")                
+write_csv(dat_wide, out_path, na = "")
+
+
+

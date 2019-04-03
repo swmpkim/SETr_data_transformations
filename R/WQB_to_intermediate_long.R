@@ -257,6 +257,30 @@ janitor::get_dupes(dat_all, date, set_id, arm_position, pin_number)
 
 
 
+# deal with columns that have similar names:
+# dplyr::coalesce()
+
+# time_predicted_low_tide == time_of_predicted_low_tide
+# time_readings_initiated == time_readings_started_dst
+# predicted_low_tide_height_ft == height_of_predicted_low_tide_ft
+# tide_station_id == tide_station_used_for_predictions
+dat_all <- dat_all %>%
+        mutate(low_tide_pred_time = coalesce(time_predicted_low_tide, 
+                                             time_of_predicted_low_tide),
+               time_readings_started = coalesce(time_readings_initiated, 
+                                                time_readings_started_dst),
+               low_tide_pred_ht_ft = coalesce(predicted_low_tide_height_ft, 
+                                              height_of_predicted_low_tide_ft),
+               tide_station_id = coalesce(as.character(tide_station_id), 
+                                          as.character(tide_station_used_for_predictions))) %>%
+        select(-time_predicted_low_tide, -time_of_predicted_low_tide,
+               -time_readings_initiated, -time_readings_started_dst,
+               -predicted_low_tide_height_ft, height_of_predicted_low_tide_ft,
+               -tide_station_used_for_predictions)
+
+
+
+
 # spit it back out into a csv:
 write_csv(dat_all, here('data', 'intermediate_long', 'WQB.csv'))
 ###
