@@ -176,9 +176,21 @@ dat$dat2016 <- dat$dat2016 %>%
 ##### DEAL WITH TIMES
 ##### THEY'RE BEING WEIRD
 
+# custom function
+fix_times <- function(x) {
+        if(class(x) != "character")
+                stop("input must be a character vector")
+        a <- janitor::excel_numeric_to_date(as.numeric(x), include_time = TRUE)
+        b <- strftime(a, format = "%H:%M")
+        b
+}
+
+######################################
+
+
 dat$dat2017[c(20, 24:26)] <- NULL
 
-test2017 <- dat$dat2017 %>%
+dat$dat2017 <- dat$dat2017 %>%
         remove_empty("rows") %>%
         rename(qc1 = primary_qa_qc_code,
                qc2 = secondary_qa_qc_code,
@@ -188,6 +200,8 @@ test2017 <- dat$dat2017 %>%
            front_back = case_when(front_back == 'F' ~ 'Front',
                                   front_back == 'B' ~ 'Back',
                                   TRUE ~ front_back),
+           time_readings_initiated = strftime(as.character(time_readings_initiated), format = "%H:%M"),
+           time_predicted_low_tide = strftime(as.character(time_predicted_low_tide), format = "%H:%M"),
            qaqc_code = case_when( !is.na(qc1) & is.na(qc2) ~ qc1,
                                   !is.na(qc1) & !is.na(qc2) ~ paste(qc1, qc2),
                                   is.na(qc1) & !is.na(qc2) ~ qc2,
@@ -200,13 +214,25 @@ test2017 <- dat$dat2017 %>%
 ## Clean up 2018
 ###############################
 
-dat$dat2018 <- dat$dat2018 %>%
+dat$dat2018[c(19)] <- NULL
+
+test2018 <- dat$dat2018 %>%
+        remove_empty("rows") %>%
+        rename(qc1 = primary_qa_qc_code,
+               qc2 = secondary_qa_qc_code) %>%
     mutate(date = as.Date(date),
-           pin_height = as.numeric(pin_length_cm),
+           pin_height_cm = as.numeric(x2018_measured_pin_height_cm),
            front_back = case_when(f_b_front_back == 'F' ~ 'Front',
                                   f_b_front_back == 'B' ~ 'Back',
-                                  TRUE ~ f_b_front_back)) %>%
-    select(set_id = set_code, date, arm_position = position, pin_number, pin_height, front_back, notes)
+                                  TRUE ~ f_b_front_back),
+           time_readings_started_dst = fix_times(time_readings_started_dst),
+           time_of_predicted_low_tide = strftime(as.character(time_of_predicted_low_tide), format = "%H:%M"),
+           qaqc_code = case_when( !is.na(qc1) & is.na(qc2) ~ qc1,
+                                  !is.na(qc1) & !is.na(qc2) ~ paste(qc1, qc2),
+                                  is.na(qc1) & !is.na(qc2) ~ qc2,
+                                  TRUE ~ NA_character_)) %>%
+        select(-qc1, -qc2, -x2018_measured_pin_height_cm, -x2017_measured_pin_height_cm) %>%
+        select(set_id = set_code, date, arm_position = position, pin_number, pin_height_cm, qaqc_code, everything())
 
 ###############################
 ###############################
