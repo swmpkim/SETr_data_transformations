@@ -248,6 +248,15 @@ dat_all <- reshape::merge_recurse(dat) %>%
            !is.na(pin_number)) %>%
     select(reserve, everything(), -sum_na)
 
-write_csv(dat_all, here('data', 'intermediate_long', 'WQB.csv'))
 
+# make sure there are no duplicates
+janitor::get_dupes(dat_all, date, set_id, arm_position, pin_number)
+# that returned "no duplicate combinations found of: 
+# date, set_id, arm_position, pin_number
+# which is what we want to see
+
+
+
+# spit it back out into a csv:
+write_csv(dat_all, here('data', 'intermediate_long', 'WQB.csv'))
 ###
