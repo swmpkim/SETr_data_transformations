@@ -39,7 +39,7 @@ dat_wide <- dat %>%
 # much borrowing from this article:
 # https://tidyr.tidyverse.org/dev/articles/pivot.html#wider-1
 
-# first see what it's doing
+# first see what the function is doing
 dat %>%
         pivot_wider_spec(names_from = pin_number, values_from = c(pin_height_cm, qaqc_code))
 
