@@ -107,6 +107,15 @@ dupes <- get_dupes(dat_wide, set_id, date, arm_position)
 # phew! got rid of them all!
 
 
+# add a column for arm-level qaqc codes
+dat_wide <- dat_wide %>%
+        mutate(arm_qaqc_code = NA_character_) %>%
+        select(reserve, set_id, date, 
+               arm_position, arm_qaqc_code,
+               everything())
+
+
+
 # let's see what got cut out:
 dat_trimmed <- dat %>%
         select(c(pin_length_pin_meas:marsh_set_elevation_navd88_in_m),
@@ -118,7 +127,7 @@ dat_trimmed <- dat %>%
 
 # intermediate file-writing if desired:
 
-# out_path <- here("data", "intermediate_wide", "WQB_wider.csv")                
+# out_path <- here("data", "intermediate_wide", "WQB_wider.csv")
 # write_csv(dat_wide, out_path, na = "")
 
 
@@ -128,7 +137,7 @@ dat_trimmed <- dat %>%
 dat_wide$date <- as.character(dat_wide$date)
 
 # create the file path
-xlpath <- here("data", "final", "WQB.xlsx")
+xlpath <- here("data", "final", "wqbset.xlsx")
 # create the workbook
 wb <- loadWorkbook(xlpath, create = TRUE)
 

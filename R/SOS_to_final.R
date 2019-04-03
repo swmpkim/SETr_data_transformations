@@ -64,6 +64,13 @@ dat_wide <- dat
 dat_wide$date <- as.character(dat_wide$date)
 dat_wide$arm_position <- as.character(dat_wide$arm_position)
 
+# add a column for arm-level qaqc codes
+dat_wide <- dat_wide %>%
+        mutate(arm_qaqc_code = NA_character_) %>%
+        select(reserve, set_id, date, 
+               arm_position, arm_qaqc_code,
+               everything())
+
 # create the file path
 xlpath <- here("data", "final", "sosset.xlsx")
 # create the workbook
