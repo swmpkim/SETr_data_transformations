@@ -216,22 +216,22 @@ dat$dat2017 <- dat$dat2017 %>%
 
 dat$dat2018[c(19)] <- NULL
 
-test2018 <- dat$dat2018 %>%
+dat$dat2018 <- dat$dat2018 %>%
         remove_empty("rows") %>%
         rename(qc1 = primary_qa_qc_code,
                qc2 = secondary_qa_qc_code) %>%
-    mutate(date = as.Date(date),
-           pin_height_cm = as.numeric(x2018_measured_pin_height_cm),
-           front_back = case_when(f_b_front_back == 'F' ~ 'Front',
-                                  f_b_front_back == 'B' ~ 'Back',
-                                  TRUE ~ f_b_front_back),
-           time_readings_started_dst = fix_times(time_readings_started_dst),
-           time_of_predicted_low_tide = strftime(as.character(time_of_predicted_low_tide), format = "%H:%M"),
-           qaqc_code = case_when( !is.na(qc1) & is.na(qc2) ~ qc1,
-                                  !is.na(qc1) & !is.na(qc2) ~ paste(qc1, qc2),
-                                  is.na(qc1) & !is.na(qc2) ~ qc2,
-                                  TRUE ~ NA_character_)) %>%
-        select(-qc1, -qc2, -x2018_measured_pin_height_cm, -x2017_measured_pin_height_cm) %>%
+        mutate(date = as.Date(date),
+               pin_height_cm = as.numeric(x2018_measured_pin_height_cm),
+               front_back = case_when(f_b_front_back == 'F' ~ 'Front',
+                                      f_b_front_back == 'B' ~ 'Back',
+                                      TRUE ~ f_b_front_back),
+               time_readings_started_dst = fix_times(time_readings_started_dst),
+               time_of_predicted_low_tide = strftime(as.character(time_of_predicted_low_tide), format = "%H:%M"),
+               qaqc_code = case_when( !is.na(qc1) & is.na(qc2) ~ qc1,
+                                      !is.na(qc1) & !is.na(qc2) ~ paste(qc1, qc2),
+                                      is.na(qc1) & !is.na(qc2) ~ qc2,
+                                      TRUE ~ NA_character_)) %>%
+        select(-qc1, -qc2, -x2018_measured_pin_height_cm, -x2017_measured_pin_height_cm, -f_b_front_back) %>%
         select(set_id = set_code, date, arm_position = position, pin_number, pin_height_cm, qaqc_code, everything())
 
 ###############################
@@ -240,15 +240,14 @@ test2018 <- dat$dat2018 %>%
 # join together all the data frames in the list 'dat'
 # this does NOT deal with column class differences
 dat_all <- reshape::merge_recurse(dat) %>%
-    mutate(sum_na = is.na(set_id) + is.na(date) + is.na(pin_height),
+    mutate(sum_na = is.na(set_id) + is.na(date) + is.na(pin_height_cm),
            reserve = 'WQB',
            date = ymd(date)) %>%
-    rename(pin_height_cm = pin_height) %>%
     filter(sum_na <3,
            !is.na(date),
            !is.na(pin_number)) %>%
     select(reserve, everything(), -sum_na)
 
-write_csv(dat_all, here('data', 'intermediate', 'WQB.csv'))
+write_csv(dat_all, here('data', 'intermediate_long', 'WQB.csv'))
 
 ###
