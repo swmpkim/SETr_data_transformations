@@ -67,11 +67,11 @@ dat_wide <- dat %>%
 
 # pivot the whole dataset this way
 
-spec <- dat %>%
-        expand(pin_number, .value = c("pin_height_cm", "qaqc_code")) %>%
-        mutate(.name = paste0(pin_number, 
-                              ifelse(.value == "pin_height_cm", 
-                                     "_height_cm", "_qaqc_code")))
+# spec <- dat %>%
+#         expand(pin_number, .value = c("pin_height_cm", "qaqc_code")) %>%
+#         mutate(.name = paste0(pin_number, 
+#                               ifelse(.value == "pin_height_cm", 
+#                                      "_height_cm", "_qaqc_code")))
 
 spec_more <- dat %>%
         expand(pin_number, .value = c("pin_height_cm", "qaqc_code",
@@ -90,6 +90,7 @@ dat_wide <- dat %>%
                -c(spal_nearby:aster_nearby)) %>%
         pivot_wider(spec = spec_more) %>%
         select(reserve, set_id, date, arm_position, 
+               time_readings_started, reader,
                pin_1_height_cm, pin_2_height_cm, pin_3_height_cm, 
                pin_4_height_cm, pin_5_height_cm, pin_6_height_cm, 
                pin_7_height_cm, pin_8_height_cm, pin_9_height_cm,
