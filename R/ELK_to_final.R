@@ -56,3 +56,15 @@ dupes <- get_dupes(dat_wide, set_id, date, arm_position)
 # write out intermediate wide file if desired
 # out_path <- here("data", "intermediate_wide", "ELK_wider.csv")
 # write_csv(dat_wide, out_path, na = "")
+
+
+
+###########################################################################
+# write to excel
+###########################################################################
+
+# create the file path
+xlpath <- here::here("data", "final", "elkset.xlsx")
+
+# source the script that generates the excel file
+source(here::here("R", "excel_sheet_script.R"))

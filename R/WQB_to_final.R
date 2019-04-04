@@ -206,3 +206,5 @@ for(i in seq_along(unique_sets)) {
 }
 
 saveWorkbook(wb)
+
+message("\n \n Excel file created! \n \n")
