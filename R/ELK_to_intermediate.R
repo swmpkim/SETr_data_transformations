@@ -122,7 +122,7 @@ rubis <- left_join(rubis, readers_rubis, by = c("date" = "sample_date"))
 
 readers_round_hill <- reader_fun("Round Hill Set Data", "B4:P5")
 readers_round_hill$sample_date[11] <- mdy("12/2/2015")
-readers_round_hill$reader[14] <- "Andrea Woolfolk"
+readers_round_hill$reader[14] <- "Andrea Woolfolk"  # confirmed via email with Charlie on 4/4/19
 round_hill <- left_join(round_hill, readers_round_hill, by = c("date" = "sample_date"))
 
 
