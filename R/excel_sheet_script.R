@@ -8,11 +8,13 @@
 library(here)
 library(XLConnect)
 
-# turn date into a character string because otherwise it saves crazily
-dat_wide$date <- as.character(dat_wide$date)
 
-# make sure everything is sorted properly in dat_wide
-dat_wide <- arrange(dat_wide, set_id, date, arm_position)
+# make sure date and arm position are characters
+# arrange things appropriately for splitting
+dat_wide <- dat_wide %>%
+        mutate(date = as.character(date),
+               arm_position = as.character(arm_position)) %>%
+        arrange(set_id, date, arm_position)
 
 # create the workbook
 wb <- loadWorkbook(xlpath, create = TRUE)
