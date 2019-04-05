@@ -29,11 +29,14 @@ qc_needs <- dat %>%
         filter(!is.na(observations)) %>%
         select(c("set_id":"height_cm"), "observations") %>%
         arrange(set_id, date, arm_position, pin_number)
-intermedpath1 <- here::here("data", "intermediate_long", "cbm_qc_obs_detailed.csv")
-intermedpath2 <- here::here("data", "intermediate_long", "cbm_qc_obs_unique.csv")
-qc_list <- unique(qc_needs$observations)
-write_csv(qc_needs, intermedpath1)
-write_csv(data.frame(qc_list), intermedpath2)
+
+# write to files if desired
+
+# intermedpath1 <- here::here("data", "intermediate_long", "cbm_qc_obs_detailed.csv")
+# intermedpath2 <- here::here("data", "intermediate_long", "cbm_qc_obs_unique.csv")
+# qc_list <- unique(qc_needs$observations)
+# write_csv(qc_needs, intermedpath1)
+# write_csv(data.frame(qc_list), intermedpath2)
 
 
 dat_backup <- dat
