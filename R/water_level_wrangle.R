@@ -11,6 +11,8 @@ load(in_file)
 ########################################################
 # use coops de-seasonalized data
 
+# dauphin island ----
+
 coops_path <- here::here("data", "water_level", "8735180_dauph_isl.csv")
 coops_dat_raw <- read_csv(coops_path)
 
@@ -19,7 +21,8 @@ dat <- coops_dat_raw %>%
         filter(year >= 1966,
                year <= 2016) %>%
         select(year, month, monthly_msl) %>%
-        mutate(date = ymd(paste0(year, month, "-01")))
+        mutate(date = ymd(paste0(year, month, "-01")),
+               lag1 = lag(monthly_msl))
 
 # linear regression: monthly msl on date
 lm_fit <- lm(monthly_msl ~ date, data = dat)
@@ -32,6 +35,14 @@ coeffs_mm_yr %>%
                ci_high = estimate + 2 * std.error)
 # reported change for 1966 - 2016 on the website is 3.50, with CI from 2.88 to 4.12
 # these come out to: estimate = 3.44; CI from 3.081 to 3.807
+
+
+
+# regression on the lag
+lm_fit2 <- lm(monthly_msl ~ lag1, data = dat)
+rate_mm_yr2 <- lm_fit2$coefficients[2] * 365.25 * 1000
+
+
 
 
 # see if anything different happens by removing any rows wtih NA for MSL
@@ -70,14 +81,23 @@ ari_out$coef
 # because of the structure of the data
 
 # rough conversion to mm/yr:
-ari_out$coef * 365.25 * 1000
+(ari_out_mm_yr <- ari_out$coef * 365.25 * 1000)
 ari_out$var.coef  # variance-covariance matrix!!!! want [3,3] for date one
 # don't know how to calculate standard error from it though, because what's n???
 
-ari_out$model
+(sterr <- sqrt(ari_out$var.coef[3,3]) )  # what units are these though
+
+ari_out_mm_yr[3] + c(-2, 2) * sterr
 
 
+ari_out$coef[2, 3]
 
+broom::tidy(ari_out$coef)
+
+ari_out$coef[3]
+
+#####################################
+# beaufort data ----
 
 
 coops_path <- here::here("data", "water_level", "8656483_beaufort_nc.csv")
@@ -107,6 +127,8 @@ coeffs_mm_yr %>%
 
 # arima
 ari_out <- arima(dat$monthly_msl, order = c(1, 0, 0), xreg = dat$date)
+
+# ari_out <- arima(dat$monthly_msl, order = c(1, 0, 0), xreg = lubridate::decimal_date(dat$date))
 
 ari_out$coef
 # this is probably m/... something?
