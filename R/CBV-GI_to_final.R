@@ -62,7 +62,6 @@ spec <- dat_all_qc %>%
         mutate(.name = paste0(pin_number, "_", .value))
 
 dat_wide <- dat_all_qc %>%
-        filter(set_id != "GI 5-2") %>%
         pivot_wider(spec = spec) %>%
         select(reserve, set_id, date, arm_position, arm_qaqc_code, 
                pin_1_height_mm, pin_2_height_mm, pin_3_height_mm, 
@@ -78,6 +77,30 @@ dupes <- get_dupes(dat_wide, set_id, date, arm_position)
 
 # create the file path
 xlpath <- here::here("data", "final", "cbv_giset.xlsx")
+
+# source the script that generates the excel file
+source(here::here("R", "excel_sheet_script.R"))
+
+
+# has to be named dat_wide to be used in the excel sheet script
+# so overwriting the other format
+# with one where qaqc_code columns are next to pin reading columns
+dat_wide <- dat_all_qc %>%
+        pivot_wider(spec = spec) %>%
+        select(reserve, set_id, date, arm_position, arm_qaqc_code, 
+               pin_1_height_mm, pin_1_qaqc_code, 
+               pin_2_height_mm, pin_2_qaqc_code, 
+               pin_3_height_mm, pin_3_qaqc_code,
+               pin_4_height_mm, pin_4_qaqc_code, 
+               pin_5_height_mm, pin_5_qaqc_code, 
+               pin_6_height_mm, pin_6_qaqc_code,
+               pin_7_height_mm, pin_7_qaqc_code, 
+               pin_8_height_mm, pin_8_qaqc_code, 
+               pin_9_height_mm, pin_9_qaqc_code,
+               everything()) 
+
+# create the file path
+xlpath <- here::here("data", "final", "cbv_gi_adjcolsset.xlsx")
 
 # source the script that generates the excel file
 source(here::here("R", "excel_sheet_script.R"))
