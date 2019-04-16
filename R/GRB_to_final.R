@@ -41,6 +41,7 @@ get_dupes(dat_trimmed, set_id, date)
 
 
 # pivot to long format
+# create some qaqc_code columns
 dat_long <- dat_trimmed %>% 
         select(set_id:arm_1.position, 
                arm_2.position, arm_3.position, arm_4.position,
@@ -52,24 +53,35 @@ dat_long <- dat_trimmed %>%
         mutate(arm_qaqc_code = NA_character_,
                qaqc_code = NA_character_)
 
-# not really sure what to do about the different arm positions so i'll
-# just keep them as-is for now, as tagalongs
 
 
 
-# pivot to wide format
+# pivot to wide format and transfer the values for arm bearings
 spec <- dat_long %>%
         expand(pin_number, .value = c("height_mm", "qaqc_code")) %>%
         mutate(.name = paste0(pin_number, "_", .value))
 
 dat_wide <- dat_long %>%
         pivot_wider(spec = spec) %>%
-        select(set_id, date, arm_position, arm_qaqc_code, 
+        mutate(arm_position_bearing = 
+                       case_when(arm_position == "arm_1" ~ arm_1.position,
+                                 arm_position == "arm_2" ~ arm_2.position,
+                                 arm_position == "arm_3" ~ arm_3.position,
+                                 arm_position == "arm_4" ~ arm_4.position)) %>% 
+        select(set_id, date, arm_position, arm_position_bearing, arm_qaqc_code, 
                pin_1_height_mm, pin_2_height_mm, pin_3_height_mm, 
                pin_4_height_mm, pin_5_height_mm, pin_6_height_mm, 
                pin_7_height_mm, pin_8_height_mm, pin_9_height_mm,
                pin_1_qaqc_code, pin_2_qaqc_code, pin_3_qaqc_code, 
                pin_4_qaqc_code, pin_5_qaqc_code, pin_6_qaqc_code, 
                pin_7_qaqc_code, pin_8_qaqc_code, pin_9_qaqc_code,
-               everything()) 
+               everything()) %>% 
+        select(-ends_with(".position"))
+
+
+# create the file path
+xlpath <- here::here("data", "final", "grbset.xlsx")
+
+# source the script that generates the excel file
+source(here::here("R", "excel_sheet_script.R"))        
 
