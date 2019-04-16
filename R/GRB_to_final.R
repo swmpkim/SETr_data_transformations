@@ -19,9 +19,11 @@ col_names <- c("site", "set_id", "date", "yrs_since_1990", arm_pin_names)
 
 
 # read in data, format date, change name of pin_0 column
-dat <- read_xlsx(path, sheet = "SET MH Database", range = "A3:AR129",
+### WOW, THE DATES. They got all messed up originally but
+# using "mac pre-2011" for the date_system seemed to fix it
+dat <- read_excel(path, sheet = "SET MH Database", range = "A3:AR129",
                  col_names = col_names) %>% 
-        mutate(date = excel_numeric_to_date(as.numeric(date)))
+        mutate(date = excel_numeric_to_date(as.numeric(date), date_system = "mac pre-2011"))
 names(dat) <- str_replace(names(dat), "pin_0", "position")
 
 
