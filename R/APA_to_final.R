@@ -25,7 +25,7 @@ qc_context <- dat %>%
 # pivot to long format and separate out arms and pin numbers
 # and rename the set_name column to set_id
 dat_long <- dat %>% 
-        select(-notes) %>% 
+        # select(-notes) %>% 
         pivot_longer(cols = north_1:west_9,
                      names_to = "arm_pin",
                      values_to = "height_mm") %>% 
@@ -34,7 +34,9 @@ dat_long <- dat %>%
 
 
 # check for duplicates
-get_dupes(dat_long, set_id, date, arm_position, pin_number)
+row_dupes <- get_dupes(dat, set_name, date)
+# write_csv(row_dupes, here::here("data", "metadata", "APA_duplicated_kinda.csv"))
+dupes <- get_dupes(dat_long, set_id, date, arm_position, pin_number)
 
 
 # looks like there are some, due to multiple readers
