@@ -113,7 +113,8 @@ dat_all <- bind_rows(set0_2, set3_5) %>%
         mutate(reader = "Brunden",
                qaqc_code = NA_character_,
                arm_qaqc_code = NA_character_,
-               pin_number = paste0("pin_", pin_number))
+               pin_number = paste0("pin_", pin_number),
+               arm_position = factor(arm_position, levels = c("N", "S", "E", "W")))
 
 # set up specs for pivoting
 spec <- dat_all %>%
@@ -142,6 +143,8 @@ dupes <- get_dupes(dat_wide, set_id, date, arm_position)
 xlpath <- here::here("data", "final", "wkbset.xlsx")
 
 # source the script that generates the excel file
+## first go change the excel sheet script but don't push it to github - 
+## modify lines 15 and 16 so it doesn't turn arm position into a character
 source(here::here("R", "excel_sheet_script.R"))
 
 
