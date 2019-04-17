@@ -91,3 +91,57 @@ set9_11 <- clean_sheet(sheet = sheets[4], range = ranges) %>%
         arrange(set_id, date, arm_position, pin_number) 
 
 
+
+######################################################
+
+# deal with readers
+
+#####################################################
+
+# after combining data, will make a column because it's all been the same person
+# moving forward there might be others but this is easy
+
+
+
+# bind them all together
+# add reader and qaqc_code columns (for pins)
+# glue pin_ to the front of pin number
+dat_all <- bind_rows(set0_2, set3_5) %>%
+        bind_rows(., set6_8) %>%
+        bind_rows(., set9_11) %>%
+        select(set_id, date, everything()) %>% 
+        mutate(reader = "Brunden",
+               qaqc_code = NA_character_,
+               arm_qaqc_code = NA_character_,
+               pin_number = paste0("pin_", pin_number))
+
+# set up specs for pivoting
+spec <- dat_all %>%
+        expand(pin_number, .value = c("height_mm", "qaqc_code")) %>%
+        mutate(.name = paste0(pin_number, "_", .value))
+
+# pivot
+dat_wide <- dat_all %>%
+        pivot_wider(spec = spec) %>% 
+        mutate(arm_position = factor(arm_position, levels = c("N", "S", "E", "W"))) %>% 
+        select(set_id, date, arm_position, arm_qaqc_code,
+               pin_1_height_mm, pin_2_height_mm, pin_3_height_mm, 
+               pin_4_height_mm, pin_5_height_mm, pin_6_height_mm, 
+               pin_7_height_mm, pin_8_height_mm, pin_9_height_mm,
+               pin_1_qaqc_code, pin_2_qaqc_code, pin_3_qaqc_code, 
+               pin_4_qaqc_code, pin_5_qaqc_code, pin_6_qaqc_code, 
+               pin_7_qaqc_code, pin_8_qaqc_code, pin_9_qaqc_code,
+               everything()) %>% 
+        arrange(set_id, date, arm_position)
+
+# check for inadvertent dupes
+dupes <- get_dupes(dat_wide, set_id, date, arm_position)
+
+
+# create the file path
+xlpath <- here::here("data", "final", "wkbset.xlsx")
+
+# source the script that generates the excel file
+source(here::here("R", "excel_sheet_script.R"))
+
+
