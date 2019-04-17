@@ -8,10 +8,14 @@ library(here)
 
 path <- here::here("data", "submitted", "2019-04-08_WKB.xls")
 
+sheets <- excel_sheets(path)  # spaces at end of sheet names
+ranges <- "A27:J135"  # same range in all sheets
+
 
 clean_sheet <- function(sheet, range){
         # read it in
-        dat <- read_excel(path, sheet = sheet, range = range) %>%
+        # specified that NA because there's at least one "<0" in the SET6-8 sheet
+        dat <- read_excel(path, sheet = sheet, range = range, na = "<0") %>%
                 clean_names()
         names(dat)[1] <- c("set_arm_pin")
         
@@ -52,16 +56,14 @@ clean_sheet <- function(sheet, range){
 ###########################################################################
 
 # SETs 0 - 2
-set0_2 <- clean_sheet(sheet = "SET0-2 Data ", range = "A27:J135") %>% 
+set0_2 <- clean_sheet(sheet = sheets[1], range = ranges) %>% 
         mutate(date_janitor = excel_numeric_to_date(as.numeric(date)),
                date_lubridate = lubridate::mdy(date),
                date_all = case_when(!is.na(date_lubridate) ~ date_lubridate,
                                     !is.na(date_janitor) ~ date_janitor)) %>% 
-        select(-date_lubridate, -date_janitor) %>% 
-        glimpse()
+        select(-date_lubridate, -date_janitor) 
 # make sure that didn't screw up dates
 sum(is.na(set0_2$date_all))
-
 # clean up
 set0_2 %<>% mutate(date = date_all) %>% 
         select(-date_all) %>% 
@@ -69,9 +71,23 @@ set0_2 %<>% mutate(date = date_all) %>%
         arrange(set_id, date, arm_position, pin_number)
 
 
+# SETs 3-5
+set3_5 <- clean_sheet(sheet = sheets[2], range = ranges) %>% 
+        mutate(date = excel_numeric_to_date(as.numeric(date))) %>% 
+        select(set_id, date, arm_position, pin_number, height_mm) %>% 
+        arrange(set_id, date, arm_position, pin_number)
+
+
+# SETs 6-8
+set6_8 <- clean_sheet(sheet = sheets[3], range = ranges) %>% 
+        mutate(date = excel_numeric_to_date(as.numeric(date))) %>% 
+        select(set_id, date, arm_position, pin_number, height_mm) %>% 
+        arrange(set_id, date, arm_position, pin_number) 
 
 # SETs 9 - 11
-set9_11 <- clean_sheet(sheet = "SET9-11 Data ", range = "A27:J135") %>%
-        mutate(date = janitor::excel_numeric_to_date(as.numeric(date)))
+set9_11 <- clean_sheet(sheet = sheets[4], range = ranges) %>%
+        mutate(date = janitor::excel_numeric_to_date(as.numeric(date))) %>% 
+        select(set_id, date, arm_position, pin_number, height_mm) %>% 
+        arrange(set_id, date, arm_position, pin_number) 
 
 
