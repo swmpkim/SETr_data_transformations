@@ -10,8 +10,8 @@ library(here)
 # using 2019-04-18 spreadsheet because there were duplicate readings
 # at two site-date combinations
 # they have been fixed in the updated spreadsheet
-# see metadata folder, files "APA_dupes_kinda.csv" and "Kim Cressman Duplicate
-# data entry question answers.xlsx"
+# see metadata folder, files "APA_dupes_kinda.csv" and 
+# "Kim Cressman Duplicate data entry question answers.xlsx"
 
 path <- here::here("data", "submitted", "2019-04-18_APA.xlsx")
 dat_raw <- read_xlsx(path) 
