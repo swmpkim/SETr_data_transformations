@@ -55,35 +55,19 @@ spec <- dat_formatted %>%
 
 
 dat_long <- dat_formatted %>% 
-        pivot_longer(spec = spec)
+        pivot_longer(spec = spec) %>% 
+        mutate(pin_number = gsub("pin", "pin_", pinnum)) %>% 
+        select(-pinnum)
+names(dat_long) <- gsub("qaqccode", "qaqc_code", names(dat_long))
+names(dat_long) <- gsub("height", "height_", names(dat_long))
+dat_long <- dat_long %>% 
+        mutate(date = as.character(date)) %>% 
+        select(set_id, date, arm_position, arm_qaqc_code, 
+               pin_number, starts_with("height"), qaqc_code, everything())
 
-
-
-###############################################################################
-# this is how it was set up to pivot to wide:
-spec <- dat %>%
-        expand(pin_number, .value = c("height_cm", "qaqc_code")) %>%
-        mutate(.name = paste0(pin_number, "_", .value))
-
-
-
-
-###############################################################################
-# this is kind of how i did it in earlier scripts:
-
-# find the columns that contain mm or cm in their names
-pos_of_hts <- grep("mm|cm", names(dat_formatted))
-# find the columns with 'flag' in their names
-pos_of_flags <- grep("pin_[c(1,2,3,4,5,6,7,8,9)]_qaqc_code", names(dat_formatted))
-# pull all pin heights and flags into long format,
-# then separate column names to identify pin numbers and type of information (flag or height)
-# and spread back out so there's one row per pin, and a column each for height and flag
-dat_long <- dat_formatted %>%
-        gather(key = "param", value = "value", c(pos_of_flags, pos_of_hts)) %>%
-        separate(param, into = c("pin", "num", "type", "units")) %>%
-        mutate(pin_number = paste(pin, num, sep = "_")) %>%
-        select(-pin, -num) %>%
-        mutate(type = case_when(type == "code" ~ "code",
-                                TRUE ~ paste0("pin_height_", type))) %>%
-        spread(key = type, value = value)
-        
+library(stringr)
+file_in <- str_extract(file_path, "[a-z]+\\.xls")
+file_out <- paste0(substr(file_in, 1, nchar(file_in)-4), "_QC.csv")
+out_path <- here::here("data", "processed")
+file_out <- paste0(out_path, "/", file_out)
+write.csv(dat_long, file_out, row.names = FALSE)
