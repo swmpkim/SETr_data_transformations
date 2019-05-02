@@ -1,5 +1,10 @@
 # this file is simple enough that one script should get the data all the way to the excel output
 
+# manual changes to qaqc codes after excel file generation:
+# DP 2-1 2011-05-19 arm 5 pin 8 HPL (from HPD)
+# HC 2-1 2011-05-01 arm 1 pin 9 HPL (from HPD)
+# WS 6-1 2018-06-08 arm 3 pins 3-9 HPL CLY (from HPD CLY)
+
 
 library(tidyverse)
 library(lubridate)
