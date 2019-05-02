@@ -12,9 +12,8 @@ library(XLConnect)
 # make sure date and arm position are characters
 # arrange things appropriately for splitting
 dat_wide <- dat_wide %>%
-        mutate(date = as.character(date),
-               arm_position = as.character(arm_position)) %>%
-        arrange(set_id, date, arm_position)
+        mutate(arm_position = as.character(arm_position)) %>%
+        arrange(set_id, year, month, day, arm_position)
 
 # create the workbook
 wb <- loadWorkbook(xlpath, create = TRUE)

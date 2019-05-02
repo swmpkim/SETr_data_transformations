@@ -15,9 +15,6 @@ library(lubridate)
 path <- here::here("data", "submitted", "2019-04-04_GND.xlsx")
 
 
-# can I just overwrite one sheet at a time??? or do i need to read in everything,
-# make it long, then wide again, and then run the excel script???
-
 # get a vector of all the sheets:
 sheetnames <- excel_sheets(path)
 
@@ -61,10 +58,11 @@ dat_wide <- dat_wide %>%
         mutate(year = year(date),
                month = month(date),
                day = mday(date)) %>% 
-        select(set_id, date, year, month, day, everything())
+        select(-date) %>% 
+        select(set_id, year, month, day, everything())
 
 # create the output file path
-xlpath <- here::here("data", "final", "gndset_splitdate.xlsx")
+xlpath <- here::here("data", "final", "gndset.xlsx")
 
 # make the file
 source(here::here("R", "excel_sheet_script.R"))
