@@ -63,7 +63,17 @@ dat_wide <- dat %>%
                everything()) 
 
 # check for inadvertent dupes
-dupes <- get_dupes(dat_wide, set_id, date, arm_position)        
+dupes <- get_dupes(dat_wide, set_id, date, arm_position)       
+
+
+# split up date into year, month, and day columns
+# so excel doesn't make dates all crazy
+dat_wide <- dat_wide %>% 
+        mutate(year = year(date),
+               month = month(date),
+               day = mday(date)) %>% 
+        select(-date) %>% 
+        select(set_id, year, month, day, everything())
 
 
 ###########################################################################

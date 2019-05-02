@@ -72,7 +72,19 @@ dat_wide <- dat_all_qc %>%
                pin_7_qaqc_code, pin_8_qaqc_code, pin_9_qaqc_code,
                everything()) 
 
+
+# check for inadvertent dupes
 dupes <- get_dupes(dat_wide, set_id, date, arm_position)
+
+
+# split up date into year, month, and day columns
+# so excel doesn't make dates all crazy
+dat_wide <- dat_wide %>% 
+        mutate(year = year(date),
+               month = month(date),
+               day = mday(date)) %>% 
+        select(-date) %>% 
+        select(set_id, year, month, day, everything())
 
 
 # create the file path
@@ -87,7 +99,8 @@ source(here::here("R", "excel_sheet_script.R"))
 # with one where qaqc_code columns are next to pin reading columns
 dat_wide <- dat_all_qc %>%
         pivot_wider(spec = spec) %>%
-        select(reserve, set_id, date, arm_position, arm_qaqc_code, 
+        select(reserve, set_id, date, 
+               arm_position, arm_qaqc_code, 
                pin_1_height_mm, pin_1_qaqc_code, 
                pin_2_height_mm, pin_2_qaqc_code, 
                pin_3_height_mm, pin_3_qaqc_code,
@@ -98,6 +111,13 @@ dat_wide <- dat_all_qc %>%
                pin_8_height_mm, pin_8_qaqc_code, 
                pin_9_height_mm, pin_9_qaqc_code,
                everything()) 
+
+dat_wide <- dat_wide %>% 
+        mutate(year = year(date),
+               month = month(date),
+               day = mday(date)) %>% 
+        select(-date) %>% 
+        select(set_id, year, month, day, everything())
 
 # create the file path
 xlpath <- here::here("data", "final", "cbv_gi_adjcolsset.xlsx")

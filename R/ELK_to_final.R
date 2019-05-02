@@ -57,6 +57,14 @@ dupes <- get_dupes(dat_wide, set_id, date, arm_position)
 # out_path <- here("data", "intermediate_wide", "ELK_wider.csv")
 # write_csv(dat_wide, out_path, na = "")
 
+# split up date into year, month, and day columns
+# so excel doesn't make dates all crazy
+dat_wide <- dat_wide %>% 
+        mutate(year = year(date),
+               month = month(date),
+               day = mday(date)) %>% 
+        select(-date) %>% 
+        select(set_id, year, month, day, everything())
 
 
 ###########################################################################
