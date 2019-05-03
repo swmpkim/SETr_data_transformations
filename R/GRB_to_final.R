@@ -6,6 +6,22 @@ library(unpivotr)
 library(janitor)
 library(here)
 
+# after running this script - manually entered the following qaqc codes
+# based on the original file and communication with the RC at GRB
+# GBF 3, 2013-07-22, arm 4, pin 4: LHE
+# SPD1, 2011-08-11, arm 3 arm_qaqc_code: CMO
+# SPD1, 2013-10-16, arm 1 pin 7; arm 3 pins 7 and 8: LHE
+# SPD1, 2014-04-17, arm 1 arm_qaqc_code: HPD WR
+# SPD1, 2014-12-14, arm 3, pins 7 and 8: LHE
+# SPD1, 2016-10-05, arm 1, pin 4: LHE
+# SPD1, 2017-07-27, arm 1, pin 7: LHE CUW CUS
+# SPU1, 2017-12-05, arm 4, arm_qaqc_code: CHL (this is arm bearing 240; was mistyped in original file as 230; also originally only labeled for pin 9 but given local knowledge, RC opted to flag whole arm)
+# SPU2, 2011-08-11, arm 4, pin 4: HSM SK
+# SPU2, 2013-10-16, arm 3, pin 9: LHE
+# SPU2, 2014-04-17, arms 2, 3, and 4 arm_qaqc_code: HPD WR
+# SPU2, 2017-12-05, arm 4, pin 4: HSM SK
+
+
 path <- here::here("data", "submitted", "2018-12-27_GRB.xlsx")
 
 # generate vector for column names
@@ -79,6 +95,20 @@ dat_wide <- dat_long %>%
                pin_7_qaqc_code, pin_8_qaqc_code, pin_9_qaqc_code,
                everything()) %>% 
         select(-ends_with(".position"))
+
+
+# check for inadvertent dupes
+dupes <- get_dupes(dat_wide, set_id, date, arm_position)
+
+
+# split up date into year, month, and day columns
+# so excel doesn't make dates all crazy
+dat_wide <- dat_wide %>% 
+        mutate(year = year(date),
+               month = month(date),
+               day = mday(date)) %>% 
+        select(-date) %>% 
+        select(set_id, year, month, day, everything())
 
 
 # create the file path
