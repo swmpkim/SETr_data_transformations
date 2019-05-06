@@ -12,16 +12,21 @@ library(here)
 # list all the files in the folder
 path <- here::here("data", "final")
 files <- dir(path, pattern = ".xlsx")
-# as of the date I'm running this, I don't want certain files:
 
+# as of the date I'm running this, I don't want certain files.
+# do want these:
 file_index <- which((files %in% c("apaset.xlsx",
                                   "cbmset.xlsx",
                                   "cbv_giset.xlsx",
+                                  "delset.xlsx",
                                   "elkset.xlsx",
                                   "gndset.xlsx",
                                   "grbset.xlsx",
+                                  "marset.xlsx",
                                   "narset.xlsx",
                                   "pdbset.xlsx",
+                                  "sosset.xlsx",
+                                  "welset.xlsx",
                                   "wkbset.xlsx",
                                   "wqbset.xlsx")))
 
@@ -57,7 +62,6 @@ for(i in seq_along(files)){
                 # and anything that ends in qaqc_code
                 dat_formatted <- dat %>% 
                         select(-sheet) %>% 
-                        mutate(date = lubridate::ymd(date)) %>% 
                         mutate_at(c("set_id", "arm_position"), as.character) %>% 
                         mutate_at(vars(ends_with("qaqc_code")), as.character)
                 
@@ -81,15 +85,17 @@ for(i in seq_along(files)){
                 
                 # put underscores back in the names
                 names(dat_long) <- gsub("pin", "pin_", names(dat_long))
+                dat_long$pin_number <- gsub("pin", "pin_", dat_long$pin_number)
                 names(dat_long) <- gsub("qaqccode", "qaqc_code", names(dat_long))
                 names(dat_long) <- gsub("height", "height_", names(dat_long))
                 
                 # format and arrange before output
                 dat_long <- dat_long %>% 
-                        mutate(date = as.character(date)) %>% 
-                        select(set_id, date, arm_position, arm_qaqc_code, 
-                               pin_number, starts_with("height"), qaqc_code, everything()) %>% 
-                        arrange(set_id, date, arm_position, pin_number)
+                        select(set_id, year, month, day, 
+                               arm_position, arm_qaqc_code, 
+                               pin_number, starts_with("height"), 
+                               qaqc_code, everything()) %>% 
+                        arrange(set_id, year, month, day, arm_position, pin_number)
                 
                 # generate output and write out file
                 file_in <- str_extract(file_path, "[a-z]+\\.xls")
