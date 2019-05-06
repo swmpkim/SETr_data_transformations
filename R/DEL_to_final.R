@@ -223,6 +223,27 @@ dat_wide <- dat_wide %>%
         select(-date) %>% 
         select(set_id, year, month, day, everything())
 
+# change the SET IDs into the coded form from DEL's metadata
+set_id_table <- data.frame(indata = sort(unique(dat_wide$set_id)),
+                           changeto = c("BBLR_deep",
+                                        "BBLR_shallow",
+                                        "SJBW_deep",
+                                        "SJBW_shallow",
+                                        "BBDL_deep",
+                                        "BBDL_shallow",
+                                        "BBEN_deep",
+                                        "BBEN_shallow",
+                                        "SJIP_deep",
+                                        "SJIP_shallow",
+                                        "SJRD_deep",
+                                        "SJRD_shallow",
+                                        "SJTR_deep",
+                                        "SJTR_shallow"))
+
+dat_wide <- left_join(dat_wide, set_id_table, by = c("set_id" = "indata")) %>% 
+        mutate(long_name = set_id,
+               set_id = changeto) %>% 
+        select(-changeto)
 
 
 # export
