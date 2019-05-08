@@ -43,7 +43,7 @@ dat2 <- left_join(dat, probs_table, by = c("problem_description" = "original")) 
                qaqc_code,
                notes = additonal_notes) %>% 
         mutate(pin_number = paste0("pin_", pin_number),
-               arm_position = paste0("arm_", arm_position))
+               arm_position = paste0("pos_", arm_position))
 
 # make a data frame with add'l notes, because i'm going to get rid of them to pivot
 keep_notes <- dat2 %>% 
@@ -90,7 +90,7 @@ dat_wide <- dat_wide %>%
                month = month(date),
                day = mday(date)) %>% 
         select(-date) %>% 
-        select(set_id, year, month, day, everything())
+        select(set_id, year, month, day, time, everything())
 
 
 
