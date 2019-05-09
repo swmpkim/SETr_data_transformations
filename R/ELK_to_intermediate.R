@@ -158,6 +158,10 @@ dat_all <- bind_rows(rubis, round_hill) %>%
         bind_rows(., azevedo) %>%
         select(set_id, date, everything())
 
+# 2019-05-09 have learned this is possible to do in one step:
+# dat_all <- bind_rows(list(rubis, round_hill, big_creek, azevedo))
+# that also replaces the need for reshape::merge_recurse
+
 
 # write out intermediate file
 out_path <- here::here("data", "intermediate_long", "ELK_intermed.csv")
