@@ -3,8 +3,9 @@ library(tidyverse)
 library(lubridate)
 library(janitor)
 
-in_file <- here::here("data", "water_level", "water_lev_dauph_isl.RData")
-load(in_file)
+
+# in_file <- here::here("data", "water_level", "water_lev_dauph_isl.RData")
+# load(in_file)
 
 
 
@@ -25,24 +26,14 @@ dat <- coops_dat_raw %>%
                lag1 = lag(monthly_msl))
 
 # linear regression: monthly msl on date
+# this comes out as meters/day
 lm_fit <- lm(monthly_msl ~ date, data = dat)
-rate_mm_yr <- lm_fit$coefficients[2] * 365.25 * 1000
+rate_mm_yr <- lm_fit$coefficients[2] * 365.25 * 1000  # DI 3.44
+CI_low <- confint(lm_fit)["date", 1] * 365.25 * 1000  # DI 3.088
+CI_high <- confint(lm_fit)["date", 2] * 365.25 * 1000 # DI 3.801
 
-coeffs <- broom::tidy(lm_fit)
-coeffs_mm_yr <- coeffs[2, 2:3, drop = FALSE] * 365.25 * 1000 
-coeffs_mm_yr %>%
-        mutate(ci_low = estimate - 2 * std.error,
-               ci_high = estimate + 2 * std.error)
+
 # reported change for 1966 - 2016 on the website is 3.50, with CI from 2.88 to 4.12
-# these come out to: estimate = 3.44; CI from 3.081 to 3.807
-
-
-
-# regression on the lag
-lm_fit2 <- lm(monthly_msl ~ lag1, data = dat)
-rate_mm_yr2 <- lm_fit2$coefficients[2] * 365.25 * 1000
-
-
 
 
 # see if anything different happens by removing any rows wtih NA for MSL
@@ -65,20 +56,21 @@ coeffs_mm_yr2 %>%
 ari_out <- arima(dat$monthly_msl, order = c(1, 0, 0))
 
 ari_out$coef
-# this is probably m/... something?
-# because of the structure of the data
-
+# this is probably m/d 
+# want mm/yr so multiply by 365.25 d/yr and 1000 mm/m
 # rough conversion to mm/yr:
 ari_out$coef * 365.25 * 1000
 
-
+# reported change for 1966 - 2016 on the website is 3.50, with CI from 2.88 to 4.12
 
 # switched-up arima
 ari_out <- arima(dat$monthly_msl, order = c(1, 0, 0), xreg = dat$date)
 
+time12 <- dat %>% select(year, month)
+ari_out3 <- arima(dat$monthly_msl, order = c(1,0,0), xreg = time12)
+ari_out3$coef * 365.25 * 1000
+
 ari_out$coef
-# this is probably m/... something?
-# because of the structure of the data
 
 # rough conversion to mm/yr:
 (ari_out_mm_yr <- ari_out$coef * 365.25 * 1000)
@@ -127,6 +119,9 @@ coeffs_mm_yr %>%
 
 # arima
 ari_out <- arima(dat$monthly_msl, order = c(1, 0, 0), xreg = dat$date)
+
+time123 <- time(dat)
+ari_out <- arima(dat$monthly_msl, order = c(1, 0, 0), xreg = time123)
 
 # ari_out <- arima(dat$monthly_msl, order = c(1, 0, 0), xreg = lubridate::decimal_date(dat$date))
 

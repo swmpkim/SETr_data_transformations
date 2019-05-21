@@ -1,0 +1,64 @@
+---
+title: "Monthly MSL data download"
+author: "Kim Cressman"
+date: "5/21/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+library(here)
+library(readxl)
+library(janitor)
+library(dplyr)
+```
+
+
+```{r}
+in_path <- here::here("water_level", "input", "Sea Level Rise Rates.xlsx")
+```
+
+
+## Read in SLR spreadsheet  
+
+```{r}
+slr_metadat <- read_excel(in_path)
+dat <- slr_metadat %>% 
+    clean_names() 
+# get rid of any that don't have an NWLON station number
+dat <- dat[!is.na(dat$nwlon_station_number), ]    
+```
+
+
+# Station Information  
+
+```{r}
+dat %>% 
+        select(-link) %>% 
+        knitr::kable()
+```
+
+
+Then loop through the station IDs - download data and save it.
+
+```{r}
+for(i in seq_along(dat$nwlon_station_number)){
+        stn <- dat$nwlon_station_number[i]
+        res <- dat$reserve[dat$nwlon_station_number == stn]
+        
+        # get data from:
+        url_path <- paste0("https://tidesandcurrents.noaa.gov/sltrends/data/", stn, "_meantrend.csv")
+        
+        # write file to:
+        out_name <- paste0(res, "_", stn, ".csv")
+        out_path <- here::here("water_level", "output", out_name)
+        download.file(url = url_path, destfile = out_path)
+        
+        print_msg <- paste0("Downloaded ", res, " data from NWLON station ", stn)
+        print(print_msg)
+}
+
+```
