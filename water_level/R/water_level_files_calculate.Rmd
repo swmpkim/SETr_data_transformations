@@ -48,6 +48,8 @@ mdat <- mdat[!is.na(mdat$nwlon_station_number), ]
 ```
 
 ```{r, fig.width = 7.5, fig.height = 4.9, results = "asis"}
+# set up outputs
+
 # figure out what's going to be read in and worked on
 file_names <- dir(here::here("water_level", "output"))
 out_length <- length(file_names)
@@ -63,7 +65,11 @@ rates <- data.frame(reserve = rep(NA_character_, out_length),
                     dates_longterm = rep(NA_character_, out_length),
                     dates_shortterm = rep(NA_character_, out_length),
                     stringsAsFactors = FALSE)
+```
 
+
+
+```{r, fig.width = 7.5, fig.height = 4.9, results = "asis"}
 
 # do it
 for(i in 1:length(file_names)){
@@ -144,9 +150,20 @@ for(i in 1:length(file_names)){
                      x = "Date",
                      y = "mean sea level (m)")
         
+        # print the plots into the document
         print(p)
         cat("  \n***   \n***  \n")
         print(q)
+        
+        # save the plots for later use
+        # generate names
+        plot_out_path <- here::here("water_level", "output")
+        plot_out_name_p <- paste0(plot_out_path, "/", to_match, "_SLRplot.svg")
+        plot_out_name_q <- paste0(plot_out_path, "/", to_match, "_SLRplusSTplot.svg")
+        # save
+        ggsave(filename = plot_out_name_p, plot = p, width = 7.5, height = 4.9, units = "in")
+        ggsave(filename = plot_out_name_q, plot = p, width = 7.5, height = 4.9, units = "in")
+        
 }
 
 ```
@@ -173,5 +190,9 @@ knitr::kable(rates, digits = 3, align = "c",
                            "CI_high",
                            "LT dates",
                            "ST dates"))
+
+out_path <- here::here("water_level", "output")
+out_name <- paste0(out_path, "/00SLRrates_all.csv")
+write.csv(rates, out_name, row.names = FALSE)
 ```
 
