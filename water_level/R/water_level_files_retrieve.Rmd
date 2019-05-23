@@ -45,20 +45,29 @@ dat %>%
 Then loop through the station IDs - download data and save it.
 
 ```{r}
-for(i in seq_along(dat$nwlon_station_number)){
+for(i in seq_along(dat$reserve)){
         stn <- dat$nwlon_station_number[i]
-        res <- dat$reserve[dat$nwlon_station_number == stn]
+        res <- dat$reserve[i]
         
         # get data from:
         url_path <- paste0("https://tidesandcurrents.noaa.gov/sltrends/data/", stn, "_meantrend.csv")
         
         # write file to:
         out_name <- paste0(res, "_", stn, ".csv")
-        out_path <- here::here("water_level", "output", out_name)
-        download.file(url = url_path, destfile = out_path)
+        out_path <- here::here("water_level", "intermediate", out_name)
         
-        print_msg <- paste0("Downloaded ", res, " data from NWLON station ", stn)
+        # if that file doesn't already exist, download it and print a message
+        # otherwise, print a message that it already exists
+        if(!file.exists(out_path)){
+            download.file(url = url_path, destfile = out_path)
+            print_msg <- paste0("Downloaded ", res, " data from NWLON station ", stn)
+            
+        } else {
+            print_msg <- paste0("File for ", res, " data from NWLON station ", stn, " already exists")
+        }
+        
         print(print_msg)
+        
 }
 
 ```
