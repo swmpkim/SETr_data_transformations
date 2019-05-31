@@ -17,7 +17,7 @@ files <- dir(path, pattern = ".xlsx")
 # do want these:
 file_index <- which((files %in% c("apaset.xlsx",
                                   "cbmset.xlsx",
-                                  "cbv_giset.xlsx",
+                                  "cbvgiset.xlsx",
                                   "delset.xlsx",
                                   "elkset.xlsx",
                                   "gndset.xlsx",
