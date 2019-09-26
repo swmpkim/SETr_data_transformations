@@ -1,7 +1,7 @@
 ---
 title: "Water Level Calculations"
 author: "Kim Cressman"
-date: "5/21/2019"
+date: "9/26/2019"
 output: pdf_document
 ---
 
@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```{r}
 library(readr)
 library(readxl)
+library(tidyr)
 library(dplyr)
 library(janitor)
 library(here)
@@ -51,7 +52,9 @@ mdat <- mdat[!is.na(mdat$nwlon_station_number), ]
 # set up outputs
 
 # figure out what's going to be read in and worked on
-file_names <- dir(here::here("water_level", "output"))
+# list the csv files in the "intermediate" folder
+file_names <- grep(".csv", dir(here::here("water_level", "intermediate")), value = TRUE)
+
 out_length <- length(file_names)
 
 # set up data frame for output
@@ -59,6 +62,9 @@ rates <- data.frame(reserve = rep(NA_character_, out_length),
                     rate_longterm = rep(0, out_length),
                     CI_low_longterm = rep(0, out_length),
                     CI_high_longterm = rep(0, out_length),
+                    rate_19yr = rep(0, out_length),
+                    CI_low_19yr = rep(0, out_length),
+                    CI_high_19yr = rep(0, out_length),
                     rate_shortterm = rep(0, out_length),
                     CI_low_shortterm = rep(0, out_length),
                     CI_high_shortterm = rep(0, out_length),
@@ -74,7 +80,7 @@ rates <- data.frame(reserve = rep(NA_character_, out_length),
 # do it
 for(i in 1:length(file_names)){
         
-        coops_path <- here::here("water_level", "output", file_names[i])
+        coops_path <- here::here("water_level", "intermediate", file_names[i])
         coops_dat_raw <- read_csv(coops_path)
         
         # identifying information
@@ -94,6 +100,9 @@ for(i in 1:length(file_names)){
         # short-term start date (use same end date)
         st_min <- mdat_i$set_start
         
+        # 19-yr start date (use same end date)
+        yr19_min <- date_max - 19
+        
         
         # long-term change
         dat <- coops_dat_raw %>%
@@ -107,6 +116,12 @@ for(i in 1:length(file_names)){
         ari_out <- arima(dat$monthly_msl_mm, order = c(1, 0, 0), xreg = dat$date)
         
         
+        # 19-year change
+        dat_sub19 <- dat %>% 
+            filter(year >= yr19_min)
+        ari_out19 <- arima(dat_sub19$monthly_msl_mm, order = c(1, 0, 0), xreg = dat_sub19$date)
+        
+        
         # short-term change
         dat_sub <- dat %>% 
                 filter(year >= st_min)
@@ -118,6 +133,9 @@ for(i in 1:length(file_names)){
                         ari_out$coef[3] * 365.25,
                         confint(ari_out)[3, 1] * 365.25,
                         confint(ari_out)[3, 2] * 365.25,
+                        ari_out19$coef[3] * 365.25,
+                        confint(ari_out19)[3, 1] * 365.25,
+                        confint(ari_out19)[3, 2] * 365.25,
                         ari_out2$coef[3] * 365.25,
                         confint(ari_out2)[3, 1] * 365.25,
                         confint(ari_out2)[3, 2] * 365.25,
@@ -125,21 +143,34 @@ for(i in 1:length(file_names)){
                         paste0(st_min, "-", date_max))
         
         p <- ggplot(dat, aes(x = date, y = monthly_msl)) +
-                geom_line(size = 0.7, col = "gray70") +
-                geom_smooth(method = "lm", col = "red3", 
-                            size = 1.5, se = FALSE,
-                            alpha = 0.6) +
-                geom_smooth(method = "loess", se = FALSE, 
-                            span = 0.5, size = 1.5,
-                            alpha = 0.6) +
+            geom_line(size = 0.7, col = "gray70") +
+            geom_smooth(method = "lm", col = "red3", 
+                        size = 1.5, se = FALSE,
+                        alpha = 0.6) +
+            geom_smooth(method = "loess", se = FALSE,
+                        span = 0.5, size = 1.5,
+                        alpha = 0.6) +
+            labs(title = paste0("Monthly Mean Sea Level for ", 
+                                to_match, "; NWLON station ", nwlon),
+                 subtitle = paste0("Red = lm smooth; Blue = loess smooth, span 0.5 \nlong-term change: ", round(ari_out$coef[3] * 365.25, 2), " mm/yr"),
+                 x = "Date",
+                 y = "mean sea level (m)") +
+            theme_classic()
+
+        
+        q <- p +
+                geom_smooth(data = dat_sub19, aes(x = date, y = monthly_msl), 
+                            col = "green3", method = "lm", 
+                            size = 2.5, se = FALSE,
+                            alpha = 0.5) +
                 labs(title = paste0("Monthly Mean Sea Level for ", 
                                     to_match, "; NWLON station ", nwlon),
-                     subtitle = paste0("Red = lm smooth; Blue = loess smooth, span 0.5 \nlong-term change: ", round(ari_out$coef[3] * 365.25, 2), " mm/yr"),
+                     subtitle = paste0("Red = lm smooth; Blue = loess smooth, span 0.5; Green = lm for ", yr19_min, "-", date_max, "\nlong-term change: ", round(ari_out$coef[3] * 365.25, 2), "; 19-yr change: ", round(ari_out19$coef[3] * 365.25, 2)),
                      x = "Date",
-                     y = "mean sea level (m)") +
-                theme_classic()
-
-        q <- p +
+                     y = "mean sea level (m)")
+        
+        
+        r <- p +
                 geom_smooth(data = dat_sub, aes(x = date, y = monthly_msl), 
                             col = "orange", method = "lm", 
                             size = 3, se = FALSE,
@@ -153,17 +184,24 @@ for(i in 1:length(file_names)){
         # print the plots into the document
         print(p)
         cat("  \n***   \n***  \n")
+        cat("  \n***   \n***  \n")
+        cat("  \n***   \n***  \n")
+        cat("  \n***   \n***  \n")
         print(q)
+        cat("  \n***   \n***  \n")
+        print(r)
+        
         
         # save the plots for later use
         # generate names
         plot_out_path <- here::here("water_level", "output")
         plot_out_name_p <- paste0(plot_out_path, "/", to_match, "_SLRplot.svg")
-        plot_out_name_q <- paste0(plot_out_path, "/", to_match, "_SLRplusSTplot.svg")
+        plot_out_name_q <- paste0(plot_out_path, "/", to_match, "_SLRplus19plot.svg")
+        plot_out_name_r <- paste0(plot_out_path, "/", to_match, "_SLRplusSTplot.svg")
         # save
         ggsave(filename = plot_out_name_p, plot = p, width = 7.5, height = 4.9, units = "in")
-        ggsave(filename = plot_out_name_q, plot = p, width = 7.5, height = 4.9, units = "in")
-        
+        ggsave(filename = plot_out_name_q, plot = q, width = 7.5, height = 4.9, units = "in")
+        ggsave(filename = plot_out_name_r, plot = r, width = 7.5, height = 4.9, units = "in")
 }
 
 ```
@@ -172,27 +210,79 @@ for(i in 1:length(file_names)){
 
 **Rates**  
 
-LT = long-term; ST = short-term  
+LT = long-term; yr19 = 19-year; ST = short-term  
 
 All rates in mm/yr  
 
 ```{r}
-rates <- rates %>% 
-        mutate_at(2:7, as.numeric)
+ratesb <- rates %>% 
+    mutate_at(2:10, as.numeric) %>% 
+    mutate(LT_CI = paste(round(CI_low_longterm, 2), 
+                         round(CI_high_longterm, 2), sep = "-"),
+           Mid_CI = paste(round(CI_low_19yr, 2), 
+                         round(CI_high_19yr, 2), sep = "-"),
+           ST_CI = paste(round(CI_low_shortterm, 2), 
+                         round(CI_high_shortterm, 2), sep = "-")) %>% 
+    select(reserve, rate_longterm, LT_CI, rate_19yr, Mid_CI, rate_shortterm, ST_CI, dates_longterm, dates_shortterm)
 
-knitr::kable(rates, digits = 3, align = "c",
+knitr::kable(ratesb, digits = 3, align = "c",
              col.names = c("Reserve",
                            "LT change",
-                           "CI_low",
-                           "CI_high",
+                           "LT CI",
+                           "19-yr change",
+                           "19-yr CI",
                            "ST change",
-                           "CI_low",
-                           "CI_high",
+                           "ST CI",
                            "LT dates",
                            "ST dates"))
 
+# write a file to be used in other scripts
 out_path <- here::here("water_level", "output")
 out_name <- paste0(out_path, "/00SLRrates_all.csv")
 write.csv(rates, out_name, row.names = FALSE)
+```
+
+```{r}
+# graph the rates
+rates2 <- rates 
+
+names(rates2) <- c("Reserve", 
+                   "LT change", "LT CI_low", "LT CI_high",
+                   "Mid_19yr change", "Mid_19yr CI_low", "Mid_19yr CI_high",
+                   "ST change", "ST CI_low", "ST CI_high", 
+                   "LT dates", "ST dates")
+
+rates2 %>% 
+    gather(key = "param", value = "value", -Reserve) %>% 
+    separate(param, into = c("long_mid_short", "param"), sep = " ") %>% 
+    spread(key = param, value = value) %>% 
+    mutate_at(3:5, as.numeric) %>% 
+    group_by(Reserve, long_mid_short) %>% 
+    ggplot(aes(group = long_mid_short, color = long_mid_short)) +
+    geom_hline(aes(yintercept = 0), col = "black", size = 1) +
+    geom_point(aes(x = Reserve, y = change), position = position_dodge(width = 0.8)) +
+    geom_errorbar(aes(x = Reserve, ymin = CI_low, ymax = CI_high), position = position_dodge(width = 0.8)) +
+    scale_color_brewer(palette = "Set1") +
+    labs(title = "Water Level Change by Reserve",
+         x = "Reserve",
+         y = "Rate of Change, mm/yr",
+         color = "Long-, Mid-, or Short-term") +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+
+# save the graph (svg and pdf)
+out_name <- paste0(out_path, "/00SLRrates_all.svg")
+ggsave(filename = out_name, width = 8, height = 6, units = "in")
+
+out_name <- paste0(out_path, "/00SLRrates_all.pdf")
+ggsave(filename = out_name, width = 8, height = 6, units = "in")
+```
+
+```{r}
+# merge the tables and write it out
+rates3 <- full_join(rates2, mdat, by = c("Reserve" = "reserve"))
+out_path <- here::here("water_level", "output")
+out_name <- paste0(out_path, "/00SLRrates_and_COOPsinfo.csv")
+write.csv(rates3, out_name, row.names = FALSE)
 ```
 
