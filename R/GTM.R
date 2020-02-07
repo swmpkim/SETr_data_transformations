@@ -49,6 +49,19 @@ sum(!is.na(napinht$raw_height_mm))
 # this is good
 
 
+# there is a site where readings weren't taken on a certain date and somehow
+# excel interpreted the blank cell as 0 and adjusted pin height became -150
+# i've explored the data a bit and there are some other slight negatives
+# but i'm okay to just replace -150 in adjusted pin height with NAs
+
+sum(dat1$height_adj_mm == -150, na.rm = TRUE)  # 27  
+
+dat1 <- dat1 %>% 
+        mutate(height_adj_mm = case_when(height_adj_mm == -150 ~ NA_real_,
+                                         TRUE ~ height_adj_mm))
+
+sum(dat1$height_adj_mm == -150, na.rm = TRUE)  # 0 now  
+
 # now only select what i want
 dat1b <- dat1 %>% 
         select(sample, date, site, station, degrees, pin, height_adj_mm)
