@@ -72,15 +72,28 @@ dat1b <- dat1b %>%
 # do similar things with the 2018 sheet
 dat2 <- read_excel(path, sheet = "2018") %>% 
         clean_names() %>% 
-        mutate(date = lubridate::ymd(date)) %>% 
+        mutate(date = lubridate::ymd(date)) 
+
+# adjust pin heights from different sets
+pin_offsets <- tribble(
+        ~pin_set, ~offset,
+        1, 0,
+        2, 150,
+        3, 390
+)
+
+dat2b <- full_join(dat2, pin_offsets, by = "pin_set") %>% 
+        mutate(adj_pin_height = pin_height - offset)
+
+dat2c <- dat2b %>% 
         select(reserve, 
                set_id = station,
                date,
-               arm_position = position,
+               arm_position = direction,   # turn this into "position" when pre-2018 data has 1,3,5,7 arm positions
                pin_number = pin,
-               height_mm = pin_height)
+               height_mm = adj_pin_height)
 
-dat_all <- bind_rows(dat1b, dat2)
+dat_all <- bind_rows(dat1b, dat2c)
 
 dat_all <- dat_all %>% 
         mutate(year = year(date),
