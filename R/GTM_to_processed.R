@@ -7,7 +7,10 @@ library(janitor)
 library(here)
 
 
-path <- here::here("data", "submitted", "2020-02-10_GTM.csv")
+path <- here::here("data", "submitted", "2020-02-11_GTM.csv")
+# using the one sent 2/10 i found some sites where the offset for
+# the use of pin set 2 hadn't been applied. Pam quickly updated the file
+# so this should be the last transformation for GTM.
 
 # read in data; convert dates and times; add a reserve column
 dat1 <- read.csv(path, stringsAsFactors = FALSE) %>% 
