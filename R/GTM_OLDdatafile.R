@@ -1,3 +1,10 @@
+# This is what I did with the original data file sent by GTM  
+# on 2/10/2020 they sent a much cleaner one, with some different,
+# more understandable station names
+# so the "GTM.R" file will clean up that one, 
+# and this is archived only because it was done.  
+
+
 library(tidyverse)
 library(lubridate)
 library(readxl)
